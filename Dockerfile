@@ -36,6 +36,20 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 # Configuraciones de Apache
 RUN a2enmod rewrite headers
 
+# Configuraciones de Laravel
+RUN mkdir -p bootstrap/cache \
+    storage/framework/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs
+
+# Permisos
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache
+
+
+
 #Configuraciones... 
 WORKDIR /var/www/html
 
@@ -43,16 +57,12 @@ COPY composer.json composer.lock ./
 COPY package-lock.json package.json vite.config.js ./
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --optimize-autoloader
-
-RUN npm install
 
 COPY . .
 
-# Permisos
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
+RUN composer install --no-dev --optimize-autoloader
+
+RUN npm install
 
 # Puerto de exposición
 EXPOSE 80
