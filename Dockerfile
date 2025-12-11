@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     libicu-dev \
     libwebp-dev \
+    libzip-dev \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
@@ -24,6 +25,7 @@ RUN docker-php-ext-install \
     bcmath \
     mbstring \
     gd \
+    zip \
     intl
 
 #Dependencias de Nodejs...
