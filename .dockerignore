@@ -1,66 +1,93 @@
-# Git
-.git/
-.gitignore
-README.md
+# ================================================
+# .dockerignore PARA LARAVEL + VITE
+# Nombre del archivo: .dockerignore (sin punto extra)
+# ================================================
 
-# Node_modules (EXCLUIR - se instala en contenedor)
-node_modules/
+# ---------- GIT ----------
+.git
+.gitignore
+.gitattributes
+README.md
+CHANGELOG.md
+LICENSE
+
+# ---------- NODE/NPM ----------
+node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
-# Environment
+# ---------- COMPOSER ----------
+vendor
+composer.phar
+# composer.lock  # Déjalo si quieres cache de dependencias
+
+# ---------- ENVIRONMENT ----------
 .env
 .env.*
-!.env.example
+!.env.example  
 
-# Vendor
-/vendor/
-composer.phar
+# ---------- LARAVEL STORAGE ----------
+storage/logs/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
+bootstrap/cache/
 
-# Storage (estructura vacía)
-/storage/*/
-!/storage/app/
-!/storage/app/public/
-!/storage/framework/
-/storage/framework/cache/data/
-/storage/framework/sessions/
-/storage/framework/views/
-/storage/logs/
+# ---------- TESTS ----------
+tests/
+phpunit.xml
+.coverage/
+.phpunit.result.cache
 
-# Bootstrap cache
-/bootstrap/cache/
+# ---------- BUILD ASSETS ----------
+public/build/
+public/hot
+mix-manifest.json
+vite-manifest.json
 
-# Tests
-/tests/
-/phpunit.xml
+# ---------- RESOURCES (CUIDADO) ----------
+# Excluir node_modules dentro de resources (COMÚN)
+resources/js/node_modules/
+resources/css/node_modules/
+resources/fonts/*.ttf
+resources/fonts/*.otf
+resources/videos/
+resources/docs/
 
-# Logs
-*.log
-laravel.log
-
-# IDE
+# ---------- IDE ----------
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
 
-# System
+# ---------- SISTEMA ----------
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Docker files
+# ---------- DOCKER ----------
 Dockerfile
 .dockerignore
 docker-compose.yml
+docker-compose.override.yml
 
-# Builds de Vite (EXCLUIR - se generan en contenedor)
-/public/build/
-/public/hot
-/mix-manifest.json
+# ---------- LOGS ----------
+*.log
+laravel.log
 
-# PERO INCLUIR archivos fuente y configuración de Vite
-!/vite.config.js
-!/package.json
-!/package-lock.json
-!/resources/
+# ---------- ARCHIVOS PESADOS ----------
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.iso
