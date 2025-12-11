@@ -39,7 +39,8 @@ RUN a2enmod rewrite headers
 #Configuraciones... 
 WORKDIR /var/www/html
 
-COPY composer.json composer.lock package-lock.json package.json vite.config.js ./
+COPY composer.json composer.lock ./
+COPY package-lock.json package.json vite.config.js ./
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
