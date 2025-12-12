@@ -3,7 +3,6 @@
 node_modules/
 vendor/
 .env
-!.env.example
 docker-compose.yml
 Dockerfile
 *.log
