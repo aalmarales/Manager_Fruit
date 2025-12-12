@@ -25,6 +25,7 @@ RUN docker-php-ext-install \
     pdo_pgsql \
     pgsql \
     bcmath \
+    pcntl \
     mbstring \
     gd \
     zip \
