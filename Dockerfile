@@ -55,7 +55,7 @@ RUN mkdir -p bootstrap/cache \
 COPY composer.json composer.lock ./
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+RUN composer install  --optimize-autoloader --no-scripts
 
 COPY . .
 
