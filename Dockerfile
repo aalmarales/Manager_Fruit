@@ -41,14 +41,11 @@ RUN mkdir -p bootstrap/cache \
     storage/framework/cache \
     storage/framework/sessions \
     storage/framework/views \
-    storage/logs
+    storage/logs \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Permisos
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
-
-
+RUN npm install && npm run build
 
 #Configuraciones... 
 WORKDIR /var/www/html
@@ -62,7 +59,11 @@ COPY . .
 
 RUN composer install --no-dev --optimize-autoloader
 
-RUN npm install
+RUN rm -rf node_modules/ vendor/
+
+RUN php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache
 
 # Puerto de exposición
 EXPOSE 80
