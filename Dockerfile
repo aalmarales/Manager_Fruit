@@ -1,5 +1,7 @@
 FROM php:8.4-apache
 
+WORKDIR /var/www/html
+
 #Dependencias del Sistema...
 
 RUN apt-get update && apt-get install -y \
@@ -45,25 +47,17 @@ RUN mkdir -p bootstrap/cache \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
 
-RUN npm install && npm run build
-
-#Configuraciones... 
-WORKDIR /var/www/html
-
-COPY composer.json composer.lock ./
 COPY package-lock.json package.json vite.config.js ./
-
+COPY composer.json composer.lock ./
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
 COPY . .
+
+
+RUN npm install
 
 RUN composer install --no-dev --optimize-autoloader
 
 RUN rm -rf node_modules/ vendor/
-
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
 
 # Puerto de exposición
 EXPOSE 80
