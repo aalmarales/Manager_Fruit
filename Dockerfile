@@ -35,6 +35,10 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
+COPY package-lock.json package.json vite.config.js ./
+
+RUN npm install
+
 # Configuraciones de Apache
 RUN a2enmod rewrite headers
 
@@ -47,17 +51,13 @@ RUN mkdir -p bootstrap/cache \
     && chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
 
-COPY package-lock.json package.json vite.config.js ./
+
 COPY composer.json composer.lock ./
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+RUN composer install --no-dev --optimize-autoloader --no-scripts
+
 COPY . .
-
-
-RUN npm install
-
-RUN composer install --no-dev --optimize-autoloader
-
-RUN rm -rf node_modules/ vendor/
 
 # Puerto de exposición
 EXPOSE 80
