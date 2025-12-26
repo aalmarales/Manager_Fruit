@@ -1,26 +1,66 @@
-FROM php:8.4-apache
+#Primer Stage Build (Alpine)
+FROM composer:latest AS vendor
+
+WORKDIR /app
+
+RUN apk add --no-cache icu-dev \
+    icu-data-full \
+    && docker-php-ext-install intl
+
+COPY composer.json composer.lock ./
+
+RUN composer install --optimize-autoloader --no-scripts
+
+#Segundo Stage Build (Debian)
+FROM node:alpine AS node-modules
+
+WORKDIR /app
+
+# Copiar vendor DE Composer primero
+COPY --from=vendor /app/vendor ./vendor
+
+COPY package.json package-lock.json vite.config.js ./
+
+COPY resources ./resources/
+COPY public ./public/
+
+RUN npm ci --only=production && npm run build
+
+#Final Stage Build
+
+FROM php:8.4-fpm-alpine
 
 WORKDIR /var/www/html
 
-#Dependencias del Sistema...
+#Copiar el binario de Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-RUN apt-get update && apt-get install -y \
+#Copiar vendor desde Composer del build
+COPY --from=vendor /app/vendor ./vendor
+
+# Copiar assets compilados desde node-builder
+COPY --from=node-modules /app/public/build ./public/build/
+
+# Copiar código de la aplicación
+COPY . .
+
+#Dependencias del Sistema...
+RUN apk add --no-cache \
     git \
     curl \
     zip \
     unzip \
     libpng-dev \
-    libonig-dev \
+    oniguruma-dev \
     libxml2-dev \
     libpq-dev \
-    libicu-dev \
-    libwebp-dev \
+    icu-dev \
+    postgresql-dev \
     libzip-dev \
+    freetype-dev \
     postgresql-client \
-    && rm -rf /var/lib/apt/lists/*
-
-#Dependencias de Docker...
-RUN docker-php-ext-install \
+    postgresql-dev \
+    && docker-php-ext-install \
     pdo \
     pdo_pgsql \
     pgsql \
@@ -31,39 +71,19 @@ RUN docker-php-ext-install \
     zip \
     intl
 
-#Dependencias de Nodejs...
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
-    && rm -rf /var/lib/apt/lists/*
+RUN composer dump-autoload --optimize \
+    && php artisan package:discover --ansi \
+    && php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache
 
-COPY package-lock.json package.json vite.config.js ./
-
-RUN npm install
-
-# Configuraciones de Apache
-RUN a2enmod rewrite headers
-
-# Configuraciones de Laravel
-RUN mkdir -p bootstrap/cache \
-    storage/framework/cache \
-    storage/framework/sessions \
-    storage/framework/views \
-    storage/logs \
-    && chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
-
-
-COPY composer.json composer.lock ./
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-RUN composer install  --optimize-autoloader --no-scripts
-
-COPY . .
+# Limpiar
+RUN rm /usr/bin/composer
 
 # Puerto de exposición
-EXPOSE 80
+EXPOSE 9000
 
-CMD ["apache2-foreground"]
+CMD ["php-fpm"]
 
 
 
