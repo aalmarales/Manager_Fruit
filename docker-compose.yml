@@ -21,7 +21,7 @@ services:
       - DB_HOST=postgres_db
 
     ports:
-      - "3000:80"
+      - "9000:80"
     depends_on:
       - postgres_db
     
