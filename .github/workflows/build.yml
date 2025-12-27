@@ -1,30 +1,58 @@
-name: ci
+name: Build y Push a Docker Hub
 
 on:
   push:
-    branches:
-      - "main"
+    tags:
+      - "v*.*.*" # Solo se ejecuta si el push incluye un tag semántico
 
 jobs:
-  docker:
+  build-and-push:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout del código
         uses: actions/checkout@v4
-      - name: Log in to Docker Hub
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Login a Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.DOCKER_USER }}
+          username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PAT }}
+
+      - name: Detectar rama base del tag
+        id: branch
+        run: |
+          BRANCH=$(git branch -r --contains ${{ github.sha }} | grep origin/ | sed 's|origin/||' | head -n 1)
+          echo "TAG_BRANCH=$BRANCH" >> $GITHUB_ENV
+
+      - name: Extraer nombre del tag
+        id: tag
+        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Extraer metadatos de Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: mrcaringi/yt2s3
+          tags: |
+            type=raw,value=latest,enable=${{ env.TAG_BRANCH == 'main' }}
+            type=raw,value=testing-${{ env.TAG_NAME }},enable=${{ env.TAG_BRANCH == 'testing' }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      - name: Build y Push de la imagen Docker
+        uses: docker/build-push-action@v5
         with:
-          driver: cloud
-          endpoint: "aalmarales/fruitsbuilder"
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          tags: "${{ vars.DOCKER_USER }}/docker-build-cloud-demo:latest"
-          # For pull requests, export results to the build cache.
-          # Otherwise, push to a registry.
-          outputs: ${{ github.event_name == 'pull_request' && 'type=cacheonly' || 'type=registry' }}
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64/v8
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}}
