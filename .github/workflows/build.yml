@@ -2,8 +2,10 @@ name: Build y Push a Docker Hub
 
 on:
   push:
-    tags:
-      - "v*.*.*" # Solo se ejecuta si el push incluye un tag semántico
+    branches:
+      - "main"
+    #tags:
+    # - "v*.*.*" # Solo se ejecuta si el push incluye un tag semántico
 
 jobs:
   build-and-push:
@@ -36,7 +38,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: mrcaringi/yt2s3
+          images: aalmarales/build_cloud_fruits
           tags: |
             type=raw,value=latest,enable=${{ env.TAG_BRANCH == 'main' }}
             type=raw,value=testing-${{ env.TAG_NAME }},enable=${{ env.TAG_BRANCH == 'testing' }}
@@ -55,4 +57,4 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64/v8
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}}
+          labels: ${{ steps.meta.outputs.labels }}
